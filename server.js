@@ -2,6 +2,7 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const bodyParser = require('body-parser');
+const path = require('path');
 
 const app = express();
 const PORT = 5000;
@@ -12,6 +13,8 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
 app.use(bodyParser.json());
+
+app.use(express.static(path.join(__dirname, 'build')));
 
 mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/friendly-place', {
   useNewUrlParser: true,
@@ -106,6 +109,10 @@ app.post('/sync', async (req, res) => {
     console.error('Error syncing posts:', err);
     res.status(500).json({ error: 'Failed to sync posts' });
   }
+});
+
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'build', 'index.html'));
 });
 
 app.use((err, req, res, next) => {
