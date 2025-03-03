@@ -6,68 +6,114 @@ const bodyParser = require('body-parser');
 const app = express();
 const PORT = 5000;
 
-app.use(cors());
+app.use(cors({
+  origin: '*',
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
 app.use(bodyParser.json());
 
-mongoose.connect('mongodb://localhost:27017/friendly-place', { useNewUrlParser: true, useUnifiedTopology: true })
-  .then(() => console.log('Connected to MongoDB'))
-  .catch((err) => console.error('Failed to connect to MongoDB', err));
+mongoose.connect('mongodb://localhost:27017/friendly-place', {
+  useNewUrlParser: true,
+  useUnifiedTopology: true
+})
+.then(() => console.log('MongoDB connected'))
+.catch(err => console.error('MongoDB connection error:', err));
 
-const postSchema = new mongoose.Schema({
-  title: String,
-  content: String,
-  name: String,
+const PostSchema = new mongoose.Schema({
+  title: { type: String, required: true },
+  content: { type: String, required: true },
+  name: { type: String, default: 'Anonymous' },
   date: { type: Date, default: Date.now },
   likes: { type: Number, default: 0 },
-  comments: [String],
+  comments: [{ type: String }]
 });
 
-const Post = mongoose.model('Post', postSchema);
+const Post = mongoose.model('Post', PostSchema);
 
-app.get('/posts', (req, res) => {
-  Post.find()
-    .then((posts) => res.json(posts))
-    .catch((err) => res.status(500).json({ error: 'Failed to fetch posts' }));
+app.get('/posts', async (req, res) => {
+  try {
+    const posts = await Post.find().sort({ date: -1 });
+    res.json(posts);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch posts' });
+  }
 });
 
-app.post('/posts', (req, res) => {
-  const newPost = new Post(req.body);
-  newPost.save()
-    .then((post) => res.status(201).json(post))
-    .catch((err) => res.status(500).json({ error: 'Failed to add post' }));
+app.post('/posts', async (req, res) => {
+  try {
+    const { title, content, name } = req.body;
+    
+    const newPost = new Post({
+      title,
+      content,
+      name: name || 'Anonymous',
+      date: new Date(),
+      likes: 0,
+      comments: []
+    });
+    
+    const savedPost = await newPost.save();
+    res.status(201).json(savedPost);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to create post' });
+  }
 });
 
-app.listen(PORT, () => {
-  console.log(`Server is running on http://localhost:${PORT}`);
+app.put('/posts/:id/like', async (req, res) => {
+  try {
+    const post = await Post.findById(req.params.id);
+    if (!post) return res.status(404).json({ error: 'Post not found' });
+    
+    post.likes += 1;
+    const updatedPost = await post.save();
+    res.json(updatedPost);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to update likes' });
+  }
 });
 
-app.put('/posts/:id/like', (req, res) => {
-    console.log(`Liking post with ID: ${req.params.id}`); 
-    Post.findByIdAndUpdate(req.params.id, { $inc: { likes: 1 } }, { new: true })
-      .then((post) => {
-        if (!post) {
-          return res.status(404).json({ error: 'Post not found' });
-        }
-        console.log('Updated post after like:', post); 
-        res.json(post);
-      })
-      .catch((err) => {
-        console.error('Error liking post:', err);
-        res.status(500).json({ error: 'Failed to like post' });
-      });
+app.put('/posts/:id/comment', async (req, res) => {
+  try {
+    const { comment } = req.body;
+    const post = await Post.findById(req.params.id);
+    if (!post) return res.status(404).json({ error: 'Post not found' });
+    
+    post.comments.push(comment);
+    const updatedPost = await post.save();
+    res.json(updatedPost);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to add comment' });
+  }
+});
+
+app.post('/sync', async (req, res) => {
+  try {
+    const postsToSync = req.body;
+    if (!Array.isArray(postsToSync) || postsToSync.length === 0) {
+      return res.status(400).json({ error: 'Invalid data format' });
+    }
+
+    const results = [];
+    for (const postData of postsToSync) {
+      const newPost = new Post(postData);
+      const savedPost = await newPost.save();
+      results.push(savedPost);
+    }
+
+    res.status(201).json(results);
+  } catch (err) {
+    console.error('Error syncing posts:', err);
+    res.status(500).json({ error: 'Failed to sync posts' });
+  }
+});
+
+app.use((err, req, res, next) => {
+  console.error('Server error:', err.stack);
+  res.status(500).json({ 
+    error: 'Something went wrong!',
+    message: process.env.NODE_ENV === 'development' ? err.message : 'Internal server error'
   });
-  
-  
-  app.put('/posts/:id/comment', (req, res) => {
-    console.log(`Adding comment to post with ID: ${req.params.id}, Comment: ${req.body.comment}`);
-    const comment = req.body.comment;
-    Post.findByIdAndUpdate(req.params.id, { $push: { comments: comment } }, { new: true })
-      .then((post) => {
-        console.log('Updated post after comment:', post); 
-        res.json(post);
-      })
-      .catch((err) => {
-        console.error('Error adding comment:', err);
-        res.status(500).json({ error: 'Failed to add comment' });
-      });
-  });
+});
+
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
