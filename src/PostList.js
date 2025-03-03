@@ -41,7 +41,7 @@ function PostList({ posts, setPosts, offlineMode, likePost, addComment }) {
     }
     
     try {
-      const response = await fetch(`http://localhost:5000/posts/${postId}/like`, {
+      const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/posts/${postId}/like`, {
         method: 'PUT',
       });
       
@@ -89,9 +89,11 @@ function PostList({ posts, setPosts, offlineMode, likePost, addComment }) {
     }
     
     try {
-      const response = await fetch(`http://localhost:5000/posts/${postId}/comment`, {
+      const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/posts/${postId}/comment`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+        },
         body: JSON.stringify({ comment }),
       });
       
