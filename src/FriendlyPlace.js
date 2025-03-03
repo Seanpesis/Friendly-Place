@@ -19,7 +19,7 @@ const samplePosts = [
 function FriendlyPlace() {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [, setError] = useState(null);
   const [offlineMode, setOfflineMode] = useState(false);
   const [syncRequired, setSyncRequired] = useState(false);
   const [lastSynced, setLastSynced] = useState(null);
@@ -152,21 +152,21 @@ function FriendlyPlace() {
     fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/sync`, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
+        'Content-Type': 'application/json'
       },
-      body: JSON.stringify(postsToSync),
+      body: JSON.stringify(postsToSync)
     })
       .then(response => {
         if (!response.ok) {
-          throw new Error('Failed to sync posts');
+          throw new Error('Network response was not ok');
         }
         return response.json();
       })
       .then(data => {
+        // ניקוי הפוסטים שחיכו לסנכרון
         localStorage.removeItem('postsToSync');
         setSyncRequired(false);
         setLastSynced(new Date());
-        localStorage.setItem('lastSynced', new Date().toISOString());
         setStatusMessage('הסנכרון הושלם בהצלחה');
         setTimeout(() => setStatusMessage(null), 3000);
         
@@ -181,7 +181,7 @@ function FriendlyPlace() {
       .finally(() => {
         setLoading(false);
       });
-  }, [fetchPosts]);
+  }, [fetchPosts, syncLocalPosts]);
 
   // בדיקת מצב חיבור אמיתי
   useEffect(() => {
