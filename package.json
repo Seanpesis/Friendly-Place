@@ -1,6 +1,6 @@
 {
   "name": "friendly-place",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "private": true,
   "dependencies": {
     "@testing-library/jest-dom": "^5.17.0",
@@ -9,7 +9,7 @@
     "body-parser": "^1.20.3",
     "cors": "^2.8.5",
     "express": "^4.21.0",
-    "mongoose": "^8.6.2",
+    "mongoose": "^8.6.3",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-scripts": "5.0.1",
@@ -19,7 +19,9 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "server": "node server.js",
+    "dev": "concurrently \"npm run server\" \"npm run start\"",
+    "deploy": "npm run build && npm run server"
   },
   "eslintConfig": {
     "extends": [
@@ -39,12 +41,12 @@
       "last 1 safari version"
     ]
   },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  },
   "description": "This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).",
   "main": "index.js",
   "keywords": [],
   "author": "",
-  "license": "ISC",
-  "devDependencies": {
-    "concurrently": "^9.1.2"
-  }
+  "license": "ISC"
 }

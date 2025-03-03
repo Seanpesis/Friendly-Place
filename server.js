@@ -13,7 +13,7 @@ app.use(cors({
 }));
 app.use(bodyParser.json());
 
-mongoose.connect('mongodb://localhost:27017/friendly-place', {
+mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/friendly-place', {
   useNewUrlParser: true,
   useUnifiedTopology: true
 })
