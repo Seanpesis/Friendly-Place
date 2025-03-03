@@ -181,7 +181,7 @@ function FriendlyPlace() {
       .finally(() => {
         setLoading(false);
       });
-  }, [fetchPosts, syncLocalPosts]);
+  }, [fetchPosts]);
 
   // בדיקת מצב חיבור אמיתי
   useEffect(() => {
