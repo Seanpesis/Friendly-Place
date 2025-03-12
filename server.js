@@ -31,19 +31,17 @@ let postsInMemory = [
   }
 ];
 
-// נסיון התחברות למסד נתונים, אבל המשך גם אם נכשל
-mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/friendly-place')
+mongoose.connect(process.env.MONGODB_URI || 'atlas-sql-67d19fd2aa91de0e9da04fbb-bj2o4.a.query.mongodb.net/myVirtualDatabase?ssl=true&authSource=admin')
 .then(() => {
   console.log('MongoDB connected successfully');
-  initializeRoutes(true); // הפעל נתיבים עם מסד נתונים
+  initializeRoutes(true); 
 })
 .catch(err => {
   console.error('MongoDB connection error:', err);
   console.log('Running in memory-only mode (no database)');
-  initializeRoutes(false); // הפעל נתיבים ללא מסד נתונים
+  initializeRoutes(false);
 });
 
-// פונקציה לאתחול נתיבים בהתאם לזמינות מסד הנתונים
 function initializeRoutes(withDatabase) {
   let Post;
   
