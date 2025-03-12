@@ -6,7 +6,6 @@ function PostList({ posts, setPosts, offlineMode, likePost, addComment }) {
   const [showComments, setShowComments] = useState({});
   const [isReallyOffline, setIsReallyOffline] = useState(!navigator.onLine);
 
-  // בדיקת מצב התחברות אמיתי
   useEffect(() => {
     const handleOnlineStatus = () => {
       setIsReallyOffline(!navigator.onLine);

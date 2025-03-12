@@ -19,7 +19,6 @@ app.use(bodyParser.json());
 
 app.use(express.static(path.join(__dirname, 'build')));
 
-// מערך זמני לשמירת פוסטים בזיכרון (ללא מסד נתונים)
 let postsInMemory = [
   {
     _id: 'sample1',
