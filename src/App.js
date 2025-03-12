@@ -32,7 +32,7 @@ function App() {
         <FriendlyPlace />
       </main>
       <footer className="app-footer">
-        <p>© 2023 Friendly Place. כל הזכויות שמורות.</p>
+        <p>© 2025 Friendly Place. כל הזכויות שמורות.</p>
       </footer>
       {showBackToTop && (
         <button 
