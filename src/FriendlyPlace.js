@@ -1,9 +1,7 @@
-// /src/FriendlyPlace.js
 import React, { useState, useEffect, useCallback } from 'react';
 import PostForm from './PostForm';
 import PostList from './PostList';
 
-// דוגמאות פוסטים למצב אופליין
 const samplePosts = [
   {
     _id: 'sample1',
@@ -26,7 +24,6 @@ function FriendlyPlace() {
   const [isReallyOffline, setIsReallyOffline] = useState(!navigator.onLine);
   const [statusMessage, setStatusMessage] = useState(null);
   
-  // הפיכת fetchPosts ל-useCallback כדי שנוכל להשתמש בה בהמשך כתלות
   const fetchPosts = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -44,12 +41,9 @@ function FriendlyPlace() {
       setSyncRequired(false);
       setLastSynced(new Date());
       
-      // עדכון הדאטה המקומי אם יש צורך לגיבוי
       localStorage.setItem('localPosts', JSON.stringify(data));
-      // שמירת זמן הסנכרון האחרון
       localStorage.setItem('lastSynced', new Date().toISOString());
       
-      // אם היו פוסטים שנשמרו מקומית, נסנכרן אותם
       syncLocalPosts();
     } catch (err) {
       console.error('Error fetching posts:', err);
@@ -64,25 +58,21 @@ function FriendlyPlace() {
     }
   }, []);
   
-  // פונקציה לטעינת פוסטים מקומיים
   const loadLocalPosts = () => {
     const localPosts = localStorage.getItem('localPosts');
     if (localPosts) {
       setPosts(JSON.parse(localPosts));
       
-      // שליפת זמן הסנכרון האחרון אם קיים
       const lastSyncTime = localStorage.getItem('lastSynced');
       if (lastSyncTime) {
         setLastSynced(new Date(lastSyncTime));
       }
     } else {
-      // אם אין פוסטים מקומיים, משתמשים בדוגמאות
       setPosts(samplePosts);
       localStorage.setItem('localPosts', JSON.stringify(samplePosts));
     }
   };
   
-  // סנכרון פוסטים מקומיים עם השרת
   const syncLocalPosts = async () => {
     const pendingPosts = localStorage.getItem('pendingPosts');
     if (!pendingPosts) return;
@@ -116,15 +106,12 @@ function FriendlyPlace() {
     }
     
     if (!failed) {
-      // אם הסנכרון הצליח, מסירים את הפוסטים הממתינים
       localStorage.removeItem('pendingPosts');
       setSyncRequired(false);
-      // רענון הפוסטים מהשרת
       fetchPosts();
     }
   };
 
-  // שמירת פוסט לסנכרון עתידי אם אנחנו במצב אופליין
   const saveForSync = (postData) => {
     const pendingPosts = localStorage.getItem('pendingPosts');
     let postsToSync = pendingPosts ? JSON.parse(pendingPosts) : [];
@@ -133,7 +120,6 @@ function FriendlyPlace() {
     setSyncRequired(true);
   };
 
-  // הפיכת syncNow ל-useCallback
   const syncNow = useCallback(() => {
     if (!navigator.onLine) {
       setStatusMessage('אין חיבור לאינטרנט. הסנכרון יתבצע אוטומטית כשהחיבור יחזור.');
@@ -163,14 +149,12 @@ function FriendlyPlace() {
         return response.json();
       })
       .then(data => {
-        // ניקוי הפוסטים שחיכו לסנכרון
         localStorage.removeItem('postsToSync');
         setSyncRequired(false);
         setLastSynced(new Date());
         setStatusMessage('הסנכרון הושלם בהצלחה');
         setTimeout(() => setStatusMessage(null), 3000);
         
-        // רענון הפוסטים מהשרת
         fetchPosts();
       })
       .catch(err => {
@@ -183,13 +167,11 @@ function FriendlyPlace() {
       });
   }, [fetchPosts]);
 
-  // בדיקת מצב חיבור אמיתי
   useEffect(() => {
     const handleOnlineStatus = () => {
       const online = navigator.onLine;
       setIsReallyOffline(!online);
       
-      // אם חזרנו לחיבור וצריך לסנכרן, ננסה לסנכרן אוטומטית
       if (online && syncRequired) {
         syncNow();
       }
@@ -204,18 +186,14 @@ function FriendlyPlace() {
     };
   }, [syncRequired, syncNow]);
   
-  // אפקט לטעינת פוסטים בטעינה הראשונית
   useEffect(() => {
     fetchPosts();
   }, [fetchPosts]);
 
-  // פונקציה להוספת פוסט
   const addPost = (newPost) => {
     if (offlineMode || isReallyOffline) {
-      // שמירה לסנכרון עתידי
       saveForSync(newPost);
       
-      // הוספה לתצוגה המקומית עם ID זמני
       const tempPost = {
         ...newPost,
         _id: `local_${Date.now()}`,
@@ -229,7 +207,6 @@ function FriendlyPlace() {
       setPosts(updatedPosts);
       localStorage.setItem('localPosts', JSON.stringify(updatedPosts));
     } else {
-      // אם מקוון, הפוסט כבר נוסף דרך מנגנון ה-fetch
       const updatedPosts = [newPost, ...posts];
       setPosts(updatedPosts);
     }

@@ -269,7 +269,6 @@
   }
 }
 
-/* Pulse animation for notifications */
 @keyframes pulse {
   0% { transform: scale(1); }
   50% { transform: scale(1.05); }
@@ -285,7 +284,6 @@
   z-index: 5;
 }
 
-/* כפתור צף לחזרה לראש העמוד */
 .back-to-top {
   position: fixed;
   bottom: 30px;
