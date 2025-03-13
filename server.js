@@ -49,6 +49,7 @@ function startServer(port) {
     .on('listening', () => {
       console.log(`Server running on port ${port}`);
     });
+  return server;
 }
 
 const PostSchema = new mongoose.Schema({
@@ -58,6 +59,45 @@ const PostSchema = new mongoose.Schema({
   date: { type: Date, default: Date.now },
   likes: { type: Number, default: 0 },
   comments: [{ type: String }]
+});
+
+function connectToMongoDB() {
+  console.log('Attempting MongoDB connection...');
+  
+  mongoose.connect(mongoURI, {
+    serverSelectionTimeoutMS: 5000,
+    connectTimeoutMS: 10000,
+    heartbeatFrequencyMS: 2000,
+    retryWrites: true
+  })
+  .then(() => {
+    console.log('MongoDB connected successfully to database:', mongoDB);
+    initializeRoutes(true);
+    if (!app.listening) startServer(PORT);
+  })
+  .catch(err => {
+    console.error('MongoDB connection error:', {
+      name: err.name,
+      message: err.message,
+      stack: err.stack
+    });
+    console.log('Running in memory-only mode (no database)');
+    initializeRoutes(false);
+    if (!app.listening) startServer(PORT);
+    
+    console.log('Retrying connection in 5 seconds...');
+    setTimeout(connectToMongoDB, 5000);
+  });
+}
+
+mongoose.connection.on('disconnected', () => {
+  console.log('MongoDB disconnected! Attempting to reconnect...');
+  setTimeout(connectToMongoDB, 5000);
+});
+
+mongoose.connection.on('error', (err) => {
+  console.error('MongoDB error:', err);
+  mongoose.disconnect();
 });
 
 function initializeRoutes(withDatabase) {
@@ -163,29 +203,4 @@ function initializeRoutes(withDatabase) {
   });
 }
 
-console.log('MongoDB Connection Details:', {
-  cluster: mongoCluster || 'Missing',
-  database: mongoDB || 'Missing',
-  userConfigured: !!mongoUser,
-  passwordConfigured: !!mongoPass
-});
-
-mongoose.connect(mongoURI, {
-  serverSelectionTimeoutMS: 5000,
-  connectTimeoutMS: 10000
-})
-.then(() => {
-  console.log('MongoDB connected successfully to database:', mongoDB);
-  initializeRoutes(true);
-  startServer(PORT);
-})
-.catch(err => {
-  console.error('MongoDB connection error:', {
-    name: err.name,
-    message: err.message,
-    code: err.code
-  });
-  console.log('Running in memory-only mode (no database)');
-  initializeRoutes(false);
-  startServer(PORT);
-});
+connectToMongoDB();
